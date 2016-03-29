@@ -232,6 +232,7 @@ var initaliseReplication = function() {
 };
 
 //finds all instances which have a mongo running tag
+//running means primary
 var findAWSRunningTag = function() {
     cl('findAWSRunningTag');
 
