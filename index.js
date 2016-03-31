@@ -241,11 +241,6 @@ var findAWSRunningTag = function() {
 
     var deferred = Q.defer();
 
-
-
-
-
-
     var hasMongoBeenInit = {"Filters": [{"Name":"tag:Mongo", "Values":["Running"]},{"Name":"instance-state-name", "Values":["running"]},{"Name":"BBCEnviroment", "Values":[env]}]};
 
     ec2.describeInstances(hasMongoBeenInit, function(err, res) {
@@ -311,28 +306,6 @@ var getlocalPrivateIP = function() {
             }
         });
     });
-};
-
-
-
-
-
-
-        ec2.describeTags({"Resources":[isntanceid]}, function(err, res) {
-            if (err) {
-                cl(err);
-                deferred.reject('could not connect to AWS');
-            } else {
-
-                console.log(res);
-                findAWSRunningTag().then(function(err) {
-                    if (err){cl(err);}
-                    deferred.resolve();
-                });
-            }
-        });
-    });
-
     return deferred.promise;
 };
 
