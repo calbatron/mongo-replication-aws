@@ -241,7 +241,7 @@ var findAWSRunningTag = function() {
 
     var deferred = Q.defer();
 
-    var hasMongoBeenInit = {"Filters": [{"Name":"tag:Mongo", "Values":["Running"]},{"Name":"instance-state-name", "Values":["running"]},{"Name":"BBCEnviroment", "Values":[env]}]};
+    var hasMongoBeenInit = {"Filters": [{"Name":"tag:Mongo", "Values":["Running"]},{"Name":"instance-state-name", "Values":["running"]},{"Name":"BBCEnvironment", "Values":[env]}]};
 
     ec2.describeInstances(hasMongoBeenInit, function(err, res) {
 
