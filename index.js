@@ -39,6 +39,9 @@ var newid               =   0;
 //used for logging
 var verbose             =   0;
 
+
+var env = "";
+
 var unirest = require("unirest");
 var AWS = require('aws-sdk');
 var Q = require('q');
@@ -238,7 +241,12 @@ var findAWSRunningTag = function() {
 
     var deferred = Q.defer();
 
-    var hasMongoBeenInit = {"Filters": [{"Name":"tag:Mongo", "Values":["Running"]},{"Name":"instance-state-name", "Values":["running"]}]};
+
+
+
+
+
+    var hasMongoBeenInit = {"Filters": [{"Name":"tag:Mongo", "Values":["Running"]},{"Name":"instance-state-name", "Values":["running"]},{"Name":"BBCEnviroment", "Values":[env]}]};
 
     ec2.describeInstances(hasMongoBeenInit, function(err, res) {
 
@@ -269,20 +277,60 @@ var findAWSRunningTag = function() {
     return deferred.promise;
 };
 
+
+var isntanceid;
+
 //get the local ip of this instance by querying it's own meta data
 var getlocalPrivateIP = function() {
     cl('getlocalPrivateIP');
     var deferred = Q.defer();
 
-    unirest.get('http://169.254.169.254/latest/meta-data/local-ipv4/')
+    unirest.get('http://169.254.169.254/latest/dynamic/instance-identity/document')
     .end(function(resp) {
-        privateIP = resp.body;
-        privateIPString = resp.body;
-        findAWSRunningTag().then(function(err) {
-            if (err){cl(err);}
-            deferred.resolve();
-        });
+        var j = JSON.parse(resp.body);
+        privateIP = j.privateIp;
+        privateIPString = j.privateIp;
+        isntanceid = j.instanceId;
 
+        ec2.describeTags({"DryRun":false, "Filters":[{"Name":"resource-id","Values":[isntanceid]}]}, function(err, res) {
+            if (err) {
+                cl(err);
+                deferred.reject('could not connect to AWS');
+
+            } else {
+                for(var obj = 0; obj < res.Tags.length ; obj++) {
+                    if (res.Tags[obj].Key === "BBCEnvironment") {
+                        env = res.Tags[obj].Value;
+                    }
+                }
+
+                findAWSRunningTag().then(function(err) {
+                    if (err){cl(err);}
+                    deferred.resolve();
+                });
+            }
+        });
+    });
+};
+
+
+
+
+
+
+        ec2.describeTags({"Resources":[isntanceid]}, function(err, res) {
+            if (err) {
+                cl(err);
+                deferred.reject('could not connect to AWS');
+            } else {
+
+                console.log(res);
+                findAWSRunningTag().then(function(err) {
+                    if (err){cl(err);}
+                    deferred.resolve();
+                });
+            }
+        });
     });
 
     return deferred.promise;
